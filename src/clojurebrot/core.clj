@@ -39,8 +39,8 @@
             z2 (z2-fn a' b')]
         (cond
           (> n (dec ITERATIONS)) nil
-          (> z2 limit) (->> (q/color (calculate-hue n z2) 0.6 1)
-                            (q/set-pixel x y))
+          (> z2 limit) (do (q/stroke (calculate-hue n z2) 0.8 1)
+                           (q/point x y))
           :else (recur a' b' (inc n)))))))
 
 (defn -main
