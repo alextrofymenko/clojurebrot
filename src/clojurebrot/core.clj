@@ -4,7 +4,10 @@
 
 (def WIDTH 1280)
 (def HEIGHT 800)
+(def HALF_WIDTH (/ WIDTH 2))
+(def HALF_HEIGHT (/ HEIGHT 2))
 (def ITERATIONS 50)
+(def LOG2 (Math/log 2))
 
 (defn setup []
   (q/frame-rate 5)
@@ -17,10 +20,10 @@
 (defn draw-state
   [{:keys [cx cy scale limit]}]
   (q/background 0)
-  (doseq [x (range (- 0 (/ WIDTH 2)) WIDTH)
-          y (range (- 0 (/ HEIGHT 2)) HEIGHT)
-          :let [zx (+ cx (* x scale))
-                zy (+ cy (* y scale))]]
+  (doseq [x (range WIDTH)
+          y (range HEIGHT)
+          :let [zx (+ cx (* (- x HALF_WIDTH) scale))
+                zy (+ cy (* (- y HALF_HEIGHT) scale))]]
     (loop [a zx
            b zy
            n 1]
@@ -29,16 +32,20 @@
             z2 (+ (* a' a') (* b' b'))]
         (cond
           (> n (dec ITERATIONS)) nil
-          (> z2 limit) (let [smooth (+ (dec n) (- 1 (/ (Math/log (Math/log (Math/sqrt z2))) (Math/log 2))))]
+          (> z2 limit) (let [smooth (+ n (- 1 (/ (Math/log (Math/log (Math/sqrt z2))) LOG2)))]
                          (q/stroke (/ smooth ITERATIONS) 0.6 1)
-                         (q/point (+ x (/ WIDTH 2)) (+ y (/ HEIGHT 2))))
+                         (q/point x y))
           :else (recur a' b' (inc n)))))))
 
 (defn -main
   [& args]
+  (set! *warn-on-reflection* true)
+  (set! *unchecked-math* true)
   (q/sketch
     :title "Mandelbrot fractal"
     :size [WIDTH HEIGHT]
     :setup setup
-    :draw draw-state
-    :middleware [m/fun-mode]))
+    :draw #(println (time (draw-state %)))
+    :middleware [m/fun-mode]
+    :feature [:exit-on-close]
+    :renderer :p2d))
